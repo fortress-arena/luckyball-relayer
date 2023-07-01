@@ -113,10 +113,9 @@ const getUserBalls = async (userAddr, seasonId) => {
 
   const key = `owner-${userAddr}-${seasonId}`
   const ballIds = db.get(key)
+  if (!ballIds) return []
+  
   const allBalls = []
-  let match6 = 0
-  let match5 = 0
-  let match4 = 0
 
   for (let i=0; i < ballIds.length; i++) {
     let ballId = ballIds[i]

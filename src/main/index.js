@@ -98,7 +98,12 @@ const relayRequestReveal = async (user, deadline, v, r, s) => {
   return await contract.relayRequestReveal(user, deadline, v, r, s, feeData)
 }
 
+const getCurrentSeasonId = async () => {
+  return Number(await contract.getCurrentSeasionId())
+}
+
 const getSeason = async (seasonId) => {
+  seasonId = seasonId || getCurrentSeasonId()
   const data = await contract.seasons(seasonId)
   const startBallId = Number(data[1])
   const endBallId = Number(data[2])
@@ -108,13 +113,13 @@ const getSeason = async (seasonId) => {
 }
 
 const getUserBalls = async (userAddr, seasonId) => {
-  seasonId = seasonId || Number(await contract.getCurrentSeasionId())
+  seasonId = seasonId || getCurrentSeasonId()
   const seasonWiningCode = Number((await contract.seasons(seasonId))[4])
 
   const key = `owner-${userAddr}-${seasonId}`
   const ballIds = db.get(key)
   if (!ballIds) return []
-  
+
   const allBalls = []
 
   for (let i=0; i < ballIds.length; i++) {
@@ -156,5 +161,7 @@ module.exports = {
   contract, 
   downloadBalls, 
   updateBallCodes, 
-  getUserBalls
+  getUserBalls,
+  getSeason,
+  relayRequestReveal
 }

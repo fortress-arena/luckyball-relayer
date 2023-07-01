@@ -56,6 +56,22 @@ app.get('/luckyball/api/getUserBalls', async (req, res, next) => {
   }
 })
 
+app.get('/luckyball/api/getSeason', async (req, res, next) => {
+  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress
+  const uri = '/luckball/api/getSeason'
+  try {
+    log.info({ ip, uri })
+    const seasonId = req.query.seasonId
+    const data = await main.getSeason(seasonId)
+    res.send(data)
+
+  } catch(err) {
+    log.error({})
+    res.status(400).send({ err: err.message })
+    next(err)
+  }
+})
+
   
 app.post('/luckyball/api/sample', async (req, res, next) => {
   try {

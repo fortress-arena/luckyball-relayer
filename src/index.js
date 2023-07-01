@@ -44,8 +44,7 @@ app.get('/luckyball/api/getUserBalls', async (req, res, next) => {
   const uri = '/luckball/api/getUserBalls'
   try {
     log.info({ ip, uri })
-    const address = req.query.address
-    const seasonId = req.query.seasonId
+    const { address, seasonId } = req.query
     const data = await main.getUserBalls(address, seasonId)
     res.send(data)
 
@@ -61,7 +60,7 @@ app.get('/luckyball/api/getSeason', async (req, res, next) => {
   const uri = '/luckball/api/getSeason'
   try {
     log.info({ ip, uri })
-    const seasonId = req.query.seasonId
+    const { seasonId } = req.query
     const data = await main.getSeason(seasonId)
     res.send(data)
 

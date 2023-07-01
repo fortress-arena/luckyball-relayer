@@ -103,7 +103,7 @@ const getCurrentSeasonId = async () => {
 }
 
 const getSeason = async (seasonId) => {
-  seasonId = seasonId || getCurrentSeasonId()
+  seasonId = seasonId || await getCurrentSeasonId()
   const data = await contract.seasons(seasonId)
   const startBallId = Number(data[1])
   const endBallId = Number(data[2])
@@ -113,7 +113,7 @@ const getSeason = async (seasonId) => {
 }
 
 const getUserBalls = async (userAddr, seasonId) => {
-  seasonId = seasonId || getCurrentSeasonId()
+  seasonId = seasonId || await getCurrentSeasonId()
   const seasonWiningCode = Number((await contract.seasons(seasonId))[4])
 
   const key = `owner-${userAddr}-${seasonId}`

@@ -16,6 +16,7 @@ if (!fs.existsSync(storage)){
 }
 const db = require(srcDir + '/db')
 const main = require(srcDir + '/main')
+const auth = require(srcDir + '/auth')
 
 app.use(bodyParser.json()); 
 app.use(bodyParser.urlencoded({ extended: true }))
@@ -30,11 +31,11 @@ app.get('/luckyball/api/ping', async (req, res, next) => {
   const uri = '/luckball/api/ping'
   try {
     log.info({ ip, uri })
-    res.send('pong')
+    res.json({ data: 'pong' })
 
   } catch(err) {
     log.error({})
-    res.status(400).send({ err: err.message })
+    res.status(400).json({ err: err.message })
     next(err)
   }
 })
@@ -46,7 +47,7 @@ app.get('/luckyball/api/getUserBalls', async (req, res, next) => {
     log.info({ ip, uri })
     const { address, seasonId } = req.query
     const data = await main.getUserBalls(address, seasonId)
-    res.send(data)
+    res.json({ data })
 
   } catch(err) {
     log.error({})
@@ -62,7 +63,7 @@ app.get('/luckyball/api/getSeason', async (req, res, next) => {
     log.info({ ip, uri })
     const { seasonId } = req.query
     const data = await main.getSeason(seasonId)
-    res.send(data)
+    res.json({ data })
 
   } catch(err) {
     log.error({})
@@ -71,17 +72,107 @@ app.get('/luckyball/api/getSeason', async (req, res, next) => {
   }
 })
 
-  
 app.post('/luckyball/api/sample', async (req, res, next) => {
+  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress
+  const uri = '/luckball/api/sample'
   try {
+    log.info({ ip, uri })
     const { data } = req.body
+    res.json({ data })
 
-    res.send({ data })
   } catch (err) {
+    res.status(400).json({ err: err.message })
+    next(err)
+  }
+})
+
+app.get('/luckyball/api/getRelayData', async (req, res, next) => {
+  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress
+  const uri = '/luckball/api/getRelayData'
+  try {
+    log.info({ ip, uri })
+    const { owner } = req.query
+    const data = await main.getRelayData(owner)
+    res.json({ data })
+
+  } catch(err) {
+    log.error({})
     res.status(400).send({ err: err.message })
     next(err)
   }
-})  
+})
+
+app.post('/luckyball/api/relayRequestReveal', async (req, res, next) => {
+  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress
+  const uri = '/luckball/api/relayRequestReveal'
+  try {
+    log.info({ ip, uri })
+    const { owner, deadline, v, r, s } = req.body
+    const isNeeded = await main.isRevealNeeded(owner)
+    
+    if (!isNeeded) {
+      return res.status(400).json({ err: 'This address has no ball to reveal yet'})
+    }
+    const txid = await main.relayRequestReveal(owner, deadline, v, r, s)
+    res.json({ data: { txid } })
+
+  } catch (err) {
+    res.status(400).json({ err: err.message })
+    next(err)
+  }
+})
+  
+
+//admin features
+
+app.get('/luckyball/api/getAuthToken', async (req, res, next) => {
+  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress
+  const uri = '/luckball/api/auth-token'
+  try {
+    log.info({ ip, uri })
+    //todo: implement user validation
+    const { user, sig } = req.query
+    const token = auth.generateAccessToken(user)
+    // const token = auth.generateAccessToken(user, sig)
+    return res.json(token)
+
+  } catch(err) {
+    log.error({ err })
+    res.status(400).json({ err: err.message })
+    next(err)
+  }
+})
+
+app.get('/luckyball/api/protected', auth.protected, (req, res, next) => {
+  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress
+  const uri = '/luckball/api/protected'
+  try {
+    log.info({ ip, uri })
+
+    const authHeader = req.headers['authorization']
+    const token = authHeader && authHeader.split(' ')[1]    
+    res.json({ token })
+
+  } catch(err) {
+    log.error({err})
+    res.status(400).json({ err: err.message })
+    next(err)
+  }
+})
+
+app.get('/luckyball/api/startSeason', auth.protected, async (req, res, next) => {
+  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress
+  const uri = '/luckball/api/startSeason'
+  try {
+    log.info({ ip, uri })
+    await main.startSeason()    
+  } catch(err) {
+    log.error({err})
+    res.status(400).json({ err: err.message })
+    next(err)
+  }
+})
+
 /*
 cron.schedule('* * * * *', function() {
   cronJob.batchPayPoll()

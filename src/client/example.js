@@ -1,11 +1,11 @@
 const ethers = require('ethers')
-const e = require('express')
 const fetch = require('node-fetch') 
 //npm install node-fetch@2
 
 const user1 = ethers.Wallet.fromPhrase('skin ride electric require nest run wagon nose ritual mammal fossil canyon')
 //'0x7BEABB9798B093B2A6246f1b748407C901Be5aeF'
-const apiHost = 'https://gateway-ipfs.atomrigs.io/luckyball/api/'
+//const apiHost = 'https://gateway-ipfs.atomrigs.io/luckyball/api/'
+const apiHost = 'http://127.0.0.1:3001/luckyball/api/'
 
 const dictToURI = (dict) => {
   const str = [];
@@ -117,8 +117,8 @@ const splitSig = (sig) => {
 
 const generateRelaySig = async () => {
   const sigData = (await apiGet(apiHost, 'getRelayData', { owner: user1.address})).data
-  return sigData
-  const rawSig = user1.signTypedData(sigData.domain, sigData.types, sigData.relayData)
+  //https://gateway-ipfs.atomrigs.io/luckyball/api/getRelayData?owner=0x7BEABB9798B093B2A6246f1b748407C901Be5aeF
+  const rawSig = await user1.signTypedData(sigData.domain, sigData.types, sigData.relayData)
   const sig = splitSig(rawSig)
   return { owner: user1.address, 
            deadline: sigData.relayData.deadline,
@@ -126,11 +126,29 @@ const generateRelaySig = async () => {
            r: sig.r,
            s: sig.s
   }
+/*
+  
+  {
+    owner: '0x7BEABB9798B093B2A6246f1b748407C901Be5aeF',
+    deadline: 1688450758,
+    v: 28,
+    r: '0x14a62029d2b64ad89be3cdadf3450a53a963e0298cb68d758bdd41a5eb86f18a',
+    s: '0x6b6befba500cef0475bb1c2b9d1f88264601ba7eca05828c07c5b187cf9a0a92'
+  }
+*/
 }
 
 const relayRequestReveal = async () => {
-  const data = generateRelaySig()
-  return await apiPost(apiHost, 'getRelayData', data)  
+  const data = await generateRelaySig()
+  return await apiPost(apiHost, 'relayRequestReveal', data)  
+/*
+  {
+    data: {
+      txid: '0x22053c310d9b63def5379d9c6f92949917a48e6ddb40c07f3e2fea6f804ae9db'
+    }
+  }
+*/
+
 }
 
 

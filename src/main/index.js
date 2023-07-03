@@ -105,7 +105,7 @@ const relayRequestReveal = async (owner, deadline, v, r, s) => {
 }
 
 const getCurrentSeasonId = async () => {  
-  return Number(await contract.getCurrentSeasionId())
+  return Number(await contract.getCurrentSeasonId())
 }
 
 const getSeason = async (seasonId) => {

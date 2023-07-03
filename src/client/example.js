@@ -4,8 +4,8 @@ const fetch = require('node-fetch')
 
 const user1 = ethers.Wallet.fromPhrase('skin ride electric require nest run wagon nose ritual mammal fossil canyon')
 //'0x7BEABB9798B093B2A6246f1b748407C901Be5aeF'
-//const apiHost = 'https://gateway-ipfs.atomrigs.io/luckyball/api/'
-const apiHost = 'http://127.0.0.1:3001/luckyball/api/'
+const apiHost = 'https://gateway-ipfs.atomrigs.io/luckyball/api/'
+//const apiHost = 'http://127.0.0.1:3001/luckyball/api/'
 
 const dictToURI = (dict) => {
   const str = [];

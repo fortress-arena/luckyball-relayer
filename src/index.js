@@ -3,9 +3,8 @@ const app = express()
 const cors = require('cors')
 const ethers = require('ethers')
 const assert = require('assert')
-//const cron = require('node-cron');
+const cron = require('node-cron');
 const srcDir = require('find-config')('src')
-//const cronJob = require(srcDir + '/cron')
 const port = 3001
 const bodyParser = require('body-parser')
 const storage = require('find-config')('storage')
@@ -173,12 +172,11 @@ app.get('/luckyball/api/startSeason', auth.protected, async (req, res, next) => 
   }
 })
 
-/*
-cron.schedule('* * * * *', function() {
-  cronJob.batchPayPoll()
-  console.log('running a task every minute');
-});
-*/
+cron.schedule('*/5 * * * *', function() {
+  main.downloadBalls()
+  main.requestRevealGroupSeed()
+  console.log('running a task every 5 minutes');
+})
 
 app.listen(port, () => {
   console.log(`LuckyBall Relay/Operator server listening at ${port}`)

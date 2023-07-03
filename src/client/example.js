@@ -8,11 +8,11 @@ const apiHost = 'https://gateway-ipfs.atomrigs.io/luckyball/api/'
 //const apiHost = 'http://127.0.0.1:3001/luckyball/api/'
 
 const dictToURI = (dict) => {
-  const str = [];
+  const str = []
   for(var p in dict){
-     str.push(encodeURIComponent(p) + "=" + encodeURIComponent(dict[p]));
+     str.push(encodeURIComponent(p) + "=" + encodeURIComponent(dict[p]))
   }
-  return str.join("&");
+  return str.join("&")
 }
 const apiGet = async (host, resource, data, accessToken) => {
   const headers = { 'Content-Type': 'application/json',
@@ -37,7 +37,7 @@ const apiPost = async (host, resource, data, accessToken) => {
   if (accessToken) {
     headers['Authorization'] = 'Bearer ' + accessToken
   }
-  const url = host + resource;
+  const url = host + resource
   const res =  await fetch(url, { method: 'post', headers: headers, 
     body: JSON.stringify(data) })
   return await res.json()
@@ -110,9 +110,9 @@ const getRelayData = async () => {
 
 const splitSig = (sig) => {
   if (sig.startsWith("0x")) {
-    sig = sig.substring(2);
+    sig = sig.substring(2)
   }
-  return {r: "0x" + sig.slice(0, 64), s: "0x" + sig.slice(64, 128), v: parseInt(sig.slice(128, 130), 16)};
+  return {r: "0x" + sig.slice(0, 64), s: "0x" + sig.slice(64, 128), v: parseInt(sig.slice(128, 130), 16)}
 }
 
 const generateRelaySig = async () => {

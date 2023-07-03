@@ -46,6 +46,7 @@ const downloadBalls = async (startBlock) => {
   if (!startBlock) startBlock = db.get('last-block')
   if (!startBlock) startBlock = 1
   let endBlock = await provider.getBlockNumber()
+  console.log('downloadBalls will process up to block# ', endBlock)
   let ballGroups = await contract.queryFilter('BallIssued', startBlock, endBlock)
   ballGroups.forEach(group => {
     let seasonId = Number(group.args.seasonId)
@@ -164,7 +165,9 @@ const startSeason = async () => {
 }
 
 const issueBalls = async (addrList, qtyList) => {
-  return (await contract.issueBalls(addrList, qtyList)).hash
+  const txid = (await contract.issueBalls(addrList, qtyList)).hash
+  //downloadBalls()
+  return txid
 }
 
 const getRelayData = async (address) => {
@@ -206,8 +209,15 @@ const isRevealNeeded = async (address) => {
 
 
 const requestRevealGroupSeed = async () => {
+  const isRevealNeeded = await contract.revealNeeded()
+  if (!isRevealNeeded) {
+    return 
+  }
   const feeOption = await getFeeOption()
-  return (await contract.requestRevealGroupSeed(feeOption)).hash
+  const txid = (await contract.requestRevealGroupSeed(feeOption)).hash
+  //downloadBalls()
+  console.log('requestRevealGroupSeed is executed ', txid)
+  return txid
 }
 
 const combineSig = (v, r, s) => {

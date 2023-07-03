@@ -25,6 +25,7 @@
     "jsonwebtoken": "^9.0.0",
     "level-rocksdb": "^5.0.0",
     "node-cron": "^3.0.2",
+    "node-fetch": "^2.6.12",
     "node-lmdb": "^0.9.7",
     "simple-node-logger": "^21.8.12",
     "update-dotenv": "^1.1.1"

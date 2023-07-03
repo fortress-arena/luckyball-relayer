@@ -45,8 +45,8 @@ app.get('/luckyball/api/getUserBalls', async (req, res, next) => {
   const uri = '/luckball/api/getUserBalls'
   try {
     log.info({ ip, uri })
-    const { address, seasonId } = req.query
-    const data = await main.getUserBalls(address, seasonId)
+    const { owner, seasonId } = req.query
+    const data = await main.getUserBalls(owner, seasonId)
     res.json({ data })
 
   } catch(err) {

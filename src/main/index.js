@@ -146,13 +146,13 @@ const compareCodes = (codeA, codeB) => {
   codeA = Number(codeA).toString()
   codeB = Number(codeB).toString()
   let matchCount = 0
-  for (let j=0; j < codeA.length; j++) {
+  for (let j=codeA.length - 1; j >= 0; j--) {
     let digitA = codeA.substr(j, 1)
     let digitB = codeB.substr(j, 1)
     if (digitA == digitB) {
       matchCount += 1
     } else {
-      continue
+      return matchCount
     }
   }
   return matchCount

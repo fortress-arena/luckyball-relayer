@@ -27,7 +27,7 @@ app.get('/', (req, res) => {
 
 app.get('/luckyball/api/ping', async (req, res, next) => {
   const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress
-  const uri = '/luckball/api/ping'
+  const uri = '/luckyball/api/ping'
   try {
     log.info({ ip, uri })
     res.json({ data: 'pong' })
@@ -41,7 +41,7 @@ app.get('/luckyball/api/ping', async (req, res, next) => {
 
 app.get('/luckyball/api/getUserBalls', async (req, res, next) => {
   const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress
-  const uri = '/luckball/api/getUserBalls'
+  const uri = '/luckyball/api/getUserBalls'
   try {
     log.info({ ip, uri })
     const { owner, seasonId } = req.query
@@ -57,7 +57,7 @@ app.get('/luckyball/api/getUserBalls', async (req, res, next) => {
 
 app.get('/luckyball/api/getSeason', async (req, res, next) => {
   const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress
-  const uri = '/luckball/api/getSeason'
+  const uri = '/luckyball/api/getSeason'
   try {
     log.info({ ip, uri })
     const { seasonId } = req.query
@@ -73,7 +73,7 @@ app.get('/luckyball/api/getSeason', async (req, res, next) => {
 
 app.post('/luckyball/api/sample', async (req, res, next) => {
   const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress
-  const uri = '/luckball/api/sample'
+  const uri = '/luckyball/api/sample'
   try {
     log.info({ ip, uri })
     const { data } = req.body
@@ -87,7 +87,7 @@ app.post('/luckyball/api/sample', async (req, res, next) => {
 
 app.get('/luckyball/api/getRelayData', async (req, res, next) => {
   const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress
-  const uri = '/luckball/api/getRelayData'
+  const uri = '/luckyball/api/getRelayData'
   try {
     log.info({ ip, uri })
     const { owner } = req.query
@@ -103,7 +103,7 @@ app.get('/luckyball/api/getRelayData', async (req, res, next) => {
 
 app.post('/luckyball/api/relayRequestReveal', async (req, res, next) => {
   const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress
-  const uri = '/luckball/api/relayRequestReveal'
+  const uri = '/luckyball/api/relayRequestReveal'
   try {
     log.info({ ip, uri })
     const { owner, deadline, v, r, s } = req.body
@@ -126,14 +126,14 @@ app.post('/luckyball/api/relayRequestReveal', async (req, res, next) => {
 
 app.get('/luckyball/api/getAuthToken', async (req, res, next) => {
   const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress
-  const uri = '/luckball/api/auth-token'
+  const uri = '/luckyball/api/auth-token'
   try {
     log.info({ ip, uri })
     //todo: implement user validation
     const { user, sig } = req.query
     const token = auth.generateAccessToken(user)
     // const token = auth.generateAccessToken(user, sig)
-    return res.json(token)
+    return res.json({ data: token })
 
   } catch(err) {
     log.error({ err })
@@ -144,13 +144,13 @@ app.get('/luckyball/api/getAuthToken', async (req, res, next) => {
 
 app.get('/luckyball/api/protected', auth.protected, (req, res, next) => {
   const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress
-  const uri = '/luckball/api/protected'
+  const uri = '/luckyball/api/protected'
   try {
     log.info({ ip, uri })
 
     const authHeader = req.headers['authorization']
     const token = authHeader && authHeader.split(' ')[1]    
-    res.json({ token })
+    res.json({ data: token })
 
   } catch(err) {
     log.error({err})
@@ -159,23 +159,58 @@ app.get('/luckyball/api/protected', auth.protected, (req, res, next) => {
   }
 })
 
-app.get('/luckyball/api/startSeason', auth.protected, async (req, res, next) => {
+app.post('/luckyball/api/startSeason', auth.protected, async (req, res, next) => {
   const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress
-  const uri = '/luckball/api/startSeason'
+  const uri = '/luckyball/api/startSeason'
   try {
     log.info({ ip, uri })
-    await main.startSeason()    
+    const txid = await main.startSeason()
+
+    res.json({data: { txid }})    
   } catch(err) {
-    log.error({err})
+    log.error({ err })
     res.status(400).json({ err: err.message })
     next(err)
   }
 })
 
-cron.schedule('*/5 * * * *', function() {
+app.post('/luckyball/api/issueBalls', auth.protected, async (req, res, next) => {
+  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress
+  const uri = '/luckyball/api/issueBalls'
+  try {
+    log.info({ ip, uri })
+    const { addrList, qtyList } = req.body
+    const txid = await main.issueBalls(addrList, qtyList)
+    res.json({ data: { txid } })    
+  } catch(err) {
+    log.error({ err })
+    res.status(400).json({ err: err.message })
+    next(err)
+  }
+})
+
+app.post('/luckyball/api/requestRevealGroupSeed', auth.protected, async (req, res, next) => {
+  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress
+  const uri = '/luckyball/api/requestRevealGroupSeed'
+  try {
+    log.info({ ip, uri })
+    const txid = await main.requestRevealGroupSeed()
+    if (!txid) {
+      return res.status(400).json({ err: 'Nohting to reveal'})
+    }
+    res.json({ data: { txid } })    
+  } catch(err) {
+    log.error({ err })
+    res.status(400).json({ err: err.message })
+    next(err)
+  }
+})
+
+
+cron.schedule('* * * * *', function() {
   main.downloadBalls()
   main.requestRevealGroupSeed()
-  console.log('running a task every 5 minutes');
+  console.log('running a task every minute');
 })
 
 app.listen(port, () => {

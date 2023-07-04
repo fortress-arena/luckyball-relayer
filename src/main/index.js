@@ -233,6 +233,10 @@ const splitSig = (sig) => {
 
 const testWords = 'skin ride electric require nest run wagon nose ritual mammal fossil canyon'
 
+const returnWallet = () => {
+  return wallet
+}
+
 module.exports = { 
   provider, 
   wallet, 
@@ -245,5 +249,7 @@ module.exports = {
   startSeason,
   issueBalls,
   getRelayData,
-  isRevealNeeded
+  isRevealNeeded,
+  returnWallet,
+  requestRevealGroupSeed
 }

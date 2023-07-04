@@ -145,7 +145,7 @@ const getUserBalls = async (userAddr, seasonId) => {
     ballList.push({ballId, code: ballData.code, matchCount})
   }
 
-  return { matchSum, seasonWin, ballList }
+  return { total, matchSum, seasonWin, ballList }
 }
 
 const compareCodes = (codeA, codeB) => {

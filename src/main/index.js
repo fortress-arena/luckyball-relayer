@@ -121,22 +121,31 @@ const getSeason = async (seasonId) => {
 
 const getUserBalls = async (userAddr, seasonId) => {
   seasonId = seasonId || await getCurrentSeasonId()
-  const seasonWiningCode = Number((await contract.seasons(seasonId))[4])
+  const season = await contract.seasons(seasonId)
+  const seasonWiningCode = Number(season[4])
+  const seasonWinningId = Number(season[3])
 
   const key = `owner-${userAddr}-${seasonId}`
   const ballIds = db.get(key)
   if (!ballIds) return []
 
-  const allBalls = []
+  const ballList = []
+  let total = ballIds.length
+  let matchSum = [0,0,0,0,0,0,0]
+  let seasonWin = 0
 
   for (let i=0; i < ballIds.length; i++) {
     let ballId = ballIds[i]
+    if (seasonWinningId > 0 && ballId == seasonWinningId) {
+      seasonWin = ballId
+    }
     let ballData = db.get(`ball-${ballId}`)
     let matchCount = compareCodes(ballData.code, seasonWiningCode)
-    allBalls.push({ballId, code: ballData.code, matchCount})
+    matchSum[matchCount] += 1
+    ballList.push({ballId, code: ballData.code, matchCount})
   }
 
-  return allBalls
+  return { matchSum, seasonWin, ballList }
 }
 
 const compareCodes = (codeA, codeB) => {

@@ -47,6 +47,7 @@ const downloadBalls = async (startBlock) => {
   if (!startBlock) startBlock = 1
   let endBlock = await provider.getBlockNumber()
   console.log('downloadBalls will process up to block# ', endBlock)
+  let ballList = new Set(db.get('ownerSeasonKey') || [])
   let ballGroups = await contract.queryFilter('BallIssued', startBlock, endBlock)
   ballGroups.forEach(group => {
     let seasonId = Number(group.args.seasonId)
@@ -59,7 +60,6 @@ const downloadBalls = async (startBlock) => {
     //console.log(ownerSeasonKey)
     //console.log(startBallId)
     //console.log(lastBallId)
-    let ballList = new Set(db.get('ownerSeasonKey') || [])
  
     for (i=startBallId; i <= lastBallId; i++) {
       let ballKey = `ball-${i}`

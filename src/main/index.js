@@ -45,9 +45,9 @@ const getCode = (seed, ballId) => {
 const downloadBalls = async (startBlock) => {
   if (!startBlock) startBlock = db.get('last-block')
   if (!startBlock) startBlock = 1
-  let endBlock = await provider.getBlockNumber()
+  let endBlock = await provider.getBlockNumber() - 1
   console.log('downloadBalls will process up to block# ', endBlock)
-  let ballList = new Set(db.get('ownerSeasonKey') || [])
+
   let ballGroups = await contract.queryFilter('BallIssued', startBlock, endBlock)
   ballGroups.forEach(group => {
     let seasonId = Number(group.args.seasonId)
@@ -57,7 +57,7 @@ const downloadBalls = async (startBlock) => {
     let startBallId = lastBallId - qty + 1
     let code = 0
     let ownerSeasonKey = `owner-${owner}-${seasonId}`
-    //console.log(ownerSeasonKey)
+    let ballList = new Set(db.get(ownerSeasonKey) || [])
     //console.log(startBallId)
     //console.log(lastBallId)
  
@@ -83,15 +83,13 @@ const updateBallCodes = async (startBlock, endBlock) => {
     for (i=0; i<ballIds.length; i++) {
       const ballId = Number(ballIds[i])
       const ball = db.get(`ball-${ballId}`)
-      ball.code = getCode(revealedSeed, ballId)
-      db.put(`ball-${ballId}`, ball)
+      if (ball.code <= 0) {
+        ball.code = getCode(revealedSeed, ballId)
+        db.put(`ball-${ballId}`, ball)
+      }
     }
     return ballIds.length
   })
-}
-
-const getSig = async () => {
-
 }
 
 const getFeeOption = async () => {
@@ -100,10 +98,25 @@ const getFeeOption = async () => {
   const maxPriorityFeePerGas = feeData.maxPriorityFeePerGas + ethers.parseUnits('3', 'gwei')
   return { maxFeePerGas, maxPriorityFeePerGas }
 }
+
 const relayRequestReveal = async (owner, deadline, v, r, s) => {
+  
   const feeOption = await getFeeOption()
-  return (await contract.relayRequestReveal(owner, deadline, v, r, s, feeOption)).hash
+  const txid = (await contract.relayRequestReveal(owner, deadline, v, r, s, feeOption)).hash
+  if (txid) {
+    const seasonId = await contract.getCurrentSeasonId()
+    const myBalls = db.get(`owner-${owner}-${seasonId}`)
+    for (i = 0; i < myBalls.length; i++) {
+      const ball = myBalls[i]
+      if (ball.code == 0) {
+        ball.code = -1
+        db.set(`ball-${i}`, ball)
+      }
+    }
+  }
+  return txid
 }
+
 
 const getCurrentSeasonId = async () => {  
   return Number(await contract.getCurrentSeasonId())
@@ -133,19 +146,30 @@ const getUserBalls = async (userAddr, seasonId) => {
   let total = ballIds.length
   let matchSum = [0,0,0,0,0,0,0]
   let seasonWin = 0
+  let revealPendingCount = 0
+  let unrevealCount = 0
+
 
   for (let i=0; i < ballIds.length; i++) {
     let ballId = ballIds[i]
+    let matchCount
     if (seasonWinningId > 0 && ballId == seasonWinningId) {
       seasonWin = ballId
     }
-    let ballData = db.get(`ball-${ballId}`)
-    let matchCount = compareCodes(ballData.code, seasonWiningCode)
-    matchSum[matchCount] += 1
-    ballList.push({ballId, code: ballData.code, matchCount})
+    let ball = db.get(`ball-${ballId}`)
+    matchCount = compareCodes(ball.code, seasonWiningCode)
+    if (ball.code < 0) {
+      revealPendingCount += 1
+    } else if (ball.code == 0) {
+      unrevealCount += 1
+    } else { // ball.code > 0
+      matchSum[matchCount] += 1
+    }
+
+    ballList.push({ballId, code: ball.code, matchCount})
   }
 
-  return { total, matchSum, seasonWin, ballList }
+  return { total, unrevealCount, revealPendingCount, matchSum, seasonWin, ballList }
 }
 
 const compareCodes = (codeA, codeB) => {

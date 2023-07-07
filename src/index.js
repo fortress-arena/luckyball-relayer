@@ -113,14 +113,14 @@ app.post('/luckyball/api/relayRequestReveal', async (req, res, next) => {
 
 //admin features
 
-app.get('/luckyball/api/getAuthToken', async (req, res, next) => {
+app.get('/luckyball/api/getAccessToken', auth.protected, async (req, res, next) => {
   try {
-    //todo: implement user validation
-    const { user, sig } = req.query
-    const token = auth.generateAccessToken(user)
-    // const token = auth.generateAccessToken(user, sig)
-    return res.json({ data: token })
-
+    if (req.isRefreshToken) {
+      const token = auth.generateAccessToken(req.user)
+      return res.json({ data: token })
+    } else {
+      res.status(400).json({ err: 'A valid refreshToken is needed'})  
+    }
   } catch(err) {
     res.status(400).json({ err: err.message })
     next(err)
@@ -175,10 +175,14 @@ app.post('/luckyball/api/requestRevealGroupSeed', auth.protected, async (req, re
 })
 
 
-cron.schedule('* * * * *', function() {
+const cronDownloadBalls = cron.schedule('* * * * *', function() {
   main.downloadBalls()
+  console.log('running downloadBalls every minute');
+})
+
+const cronRequestRevealGroupSeed = cron.schedule('* */2 * * *', function() {
   main.requestRevealGroupSeed()
-  console.log('running a task every minute');
+  console.log('running requestRevealGroupSeed every 2 horus');
 })
 
 app.listen(port, () => {

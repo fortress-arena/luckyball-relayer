@@ -9,6 +9,7 @@ const generateAccessToken = (user, exp) => {
   return jwt.sign(
     {
       user,
+      isRefreshToken: false,
       exp: Math.floor(Date.now() / 1000) + exp
     },
     readJwtPrivateKey(),
@@ -16,11 +17,20 @@ const generateAccessToken = (user, exp) => {
   )
 }
 
-const validateUser = (user) => {
-  return true
+const generateRefreshToken = (user, exp) => {
+  exp = exp || 60*60*24*365
+  return jwt.sign(
+    {
+      user,
+      isRefreshToken: true,
+      exp: Math.floor(Date.now() / 1000) + exp
+    },
+    readJwtPrivateKey(),
+    { algorithm: 'RS256' }
+  )
 }
 
-const verifyToken = async (token) => {
+const verifyAccessToken = async (token) => {
   try {
     return await jwt.verify(token, readJwtPublicKey(), { algorithm: 'RS256' })
   } catch(err) {
@@ -32,15 +42,15 @@ const protected = async (req, res, next) => {
   const authHeader = req.headers['authorization']
   const token = authHeader && authHeader.split(' ')[1] 
   if (token == null) return res.status(401).json({ err: 'No access token found'})
-  const result = await verifyToken(token)
+  const result = await verifyAccessToken(token)
   if (result.err) return res.status(401).json({ err: result.err })
   req.user = result.user
+  req.isRefreshToken = result.isRefreshToken
   next()
 }
 
 module.exports = {
   generateAccessToken,
-  validateUser,
-  verifyToken,
+  verifyAccessToken,
   protected
 }

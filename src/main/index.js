@@ -117,7 +117,6 @@ const relayRequestReveal = async (owner, deadline, v, r, s) => {
   return txid
 }
 
-
 const getCurrentSeasonId = async () => {  
   return Number(await contract.getCurrentSeasonId())
 }
@@ -149,7 +148,6 @@ const getUserBalls = async (userAddr, seasonId) => {
   let revealPendingCount = 0
   let unrevealCount = 0
 
-
   for (let i=0; i < ballIds.length; i++) {
     let ballId = ballIds[i]
     let matchCount
@@ -166,7 +164,7 @@ const getUserBalls = async (userAddr, seasonId) => {
       matchSum[matchCount] += 1
     }
 
-    ballList.push({ballId, code: ball.code, matchCount})
+    ballList.push([ballId, ball.code, matchCount])
   }
 
   return { total, unrevealCount, revealPendingCount, matchSum, seasonWin, ballList }

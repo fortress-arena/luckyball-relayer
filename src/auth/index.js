@@ -44,6 +44,18 @@ const protected = async (req, res, next) => {
   if (token == null) return res.status(401).json({ err: 'No access token found'})
   const result = await verifyAccessToken(token)
   if (result.err) return res.status(401).json({ err: result.err })
+  if (result.isRefreshToken) return res.status(401).json({ err: 'Refresh token is not allowed'})
+  req.user = result.user
+  req.isRefreshToken = result.isRefreshToken
+  next()
+}
+
+const protectedRefresh = async (req, res, next) => {
+  const authHeader = req.headers['authorization']
+  const token = authHeader && authHeader.split(' ')[1] 
+  if (token == null) return res.status(401).json({ err: 'No refresh token found'})
+  const result = await verifyAccessToken(token)
+  if (result.err) return res.status(401).json({ err: result.err })
   req.user = result.user
   req.isRefreshToken = result.isRefreshToken
   next()
@@ -52,5 +64,6 @@ const protected = async (req, res, next) => {
 module.exports = {
   generateAccessToken,
   verifyAccessToken,
-  protected
+  protected,
+  protectedRefresh
 }

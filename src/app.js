@@ -1,7 +1,8 @@
 const express = require('express')
 const app = express()
 const cors = require('cors')
-const cron = require('node-cron');
+//const cron = require('node-cron');
+const ethers = require('ethers')
 const srcDir = require('find-config')('src')
 const bodyParser = require('body-parser')
 const storage = require('find-config')('storage')
@@ -16,7 +17,7 @@ const morgan = require('morgan')
 const path = require('path')
 const rfs = require('rotating-file-stream')
 
-const port = 3001
+//const port = 3001
 
 const accessLogStream = rfs.createStream('access.log', {
   interval: '1d', // rotate daily
@@ -48,7 +49,8 @@ app.get('/luckyball/api/ping', async (req, res, next) => {
 
 app.get('/luckyball/api/getUserBalls', async (req, res, next) => {
   try {
-    const { owner, seasonId } = req.query
+    let { owner, seasonId } = req.query
+    owner = ethers.getAddress(owner)
     const data = await main.getUserBalls(owner, seasonId)
     res.json({ data })
 
@@ -70,20 +72,10 @@ app.get('/luckyball/api/getSeason', async (req, res, next) => {
   }
 })
 
-app.post('/luckyball/api/sample', async (req, res, next) => {
-  try {
-    const { data } = req.body
-    res.json({ data })
-
-  } catch (err) {
-    res.status(400).json({ err: err.message })
-    next(err)
-  }
-})
-
 app.get('/luckyball/api/getRelayData', async (req, res, next) => {
   try {
-    const { owner } = req.query
+    let { owner } = req.query
+    owner = ethers.getAddress(owner)
     const data = await main.getRelayData(owner)
     res.json({ data })
 
@@ -95,7 +87,8 @@ app.get('/luckyball/api/getRelayData', async (req, res, next) => {
 
 app.post('/luckyball/api/relayRequestReveal', async (req, res, next) => {
   try {
-    const { owner, deadline, v, r, s } = req.body
+    let { owner, deadline, v, r, s } = req.body
+    owner = ethers.getAddress(owner)
     const isNeeded = await main.isRevealNeededUser(owner)
     
     if (!isNeeded) {
@@ -127,7 +120,7 @@ app.post('/luckyball/api/genAccessToken', auth.protectedRefresh, async (req, res
   }
 })
 
-app.get('/luckyball/api/protected', auth.protected, (req, res, next) => {
+app.get('/luckyball/api/protected', auth.protectedAccess, (req, res, next) => {
   try {
     const authHeader = req.headers['authorization']
     const token = authHeader && authHeader.split(' ')[1]    
@@ -139,7 +132,7 @@ app.get('/luckyball/api/protected', auth.protected, (req, res, next) => {
   }
 })
 
-app.post('/luckyball/api/startSeason', auth.protected, async (req, res, next) => {
+app.post('/luckyball/api/startSeason', auth.protectedAccess, async (req, res, next) => {
   try {
     const txid = await main.startSeason()
 
@@ -150,7 +143,7 @@ app.post('/luckyball/api/startSeason', auth.protected, async (req, res, next) =>
   }
 })
 
-app.post('/luckyball/api/issueBalls', auth.protected, async (req, res, next) => {
+app.post('/luckyball/api/issueBalls', auth.protectedAccess, async (req, res, next) => {
   try {
     const { addrList, qtyList } = req.body
     const txid = await main.issueBalls(addrList, qtyList)
@@ -160,8 +153,8 @@ app.post('/luckyball/api/issueBalls', auth.protected, async (req, res, next) => 
     next(err)
   }
 })
-
-app.post('/luckyball/api/requestRevealGroupSeed', auth.protected, async (req, res, next) => {
+ 
+app.post('/luckyball/api/requestRevealGroupSeed', auth.protectedAccess, async (req, res, next) => {
   try {
     const txid = await main.requestRevealGroupSeed()
     if (!txid) {
@@ -174,17 +167,32 @@ app.post('/luckyball/api/requestRevealGroupSeed', auth.protected, async (req, re
   }
 })
 
+app.post('/luckyball/api/endSeason', auth.protectedAccess, async (req, res, next) => {
+  try {
+    const txid = await main.endSeason()
 
-const cronDownloadBalls = cron.schedule('* * * * *', function() {
-  main.downloadBalls()
-  console.log('running downloadBalls every minute');
+    res.json({data: { txid }})    
+  } catch(err) {
+    res.status(400).json({ err: err.message })
+    next(err)
+  }
 })
 
-const cronRequestRevealGroupSeed = cron.schedule('* */2 * * *', function() {
-  main.requestRevealGroupSeed()
-  console.log('running requestRevealGroupSeed every 2 hours');
-})
 
-app.listen(port, () => {
-  console.log(`LuckyBall Relay/Operator server listening at ${port}`)
-})
+//const cronDownloadBalls = cron.schedule('* * * * *', function() {
+//  main.downloadBalls()
+//  console.log('running downloadBalls every minute');
+//})
+
+//const cronRequestRevealGroupSeed = cron.schedule('0 */2 * * *', function() {
+//  main.requestRevealGroupSeed()
+//  console.log('running requestRevealGroupSeed every 2 hours');
+//}) 
+//moved to indexer.js
+
+
+//app.listen(port, () => {
+//  console.log(`LuckyBall Relay/Operator server listening at ${port}`)
+//})
+
+module.exports = app

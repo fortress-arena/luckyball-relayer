@@ -5,32 +5,10 @@ const { readMnemonic } = require(srcDir + '/keyman')
 const db = require(srcDir + '/db')
 
 require('dotenv').config({ path: require('find-config')('.env') })
+let { networkId, provider, wallet, contract, alchemyWs, contractAbi, contractAddr } = require(srcDir + '/config')
+//let config = require(srcDir + '/config')
 
-//const defaultPath = "m/44'/60'/0'/0/0"
-//const contractAddr = '0xd376ef3C423F318e83e52A3A74edb826d13505D6'
-const contractAddr = '0x2933379AAd4ECb8e635C40F18D79a903B46C8cE3'
-const contractAbi = [{"inputs":[{"internalType":"address","name":"have","type":"address"},{"internalType":"address","name":"want","type":"address"}],"name":"OnlyCoordinatorCanFulfill","type":"error"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint16","name":"seasonId","type":"uint16"},{"indexed":true,"internalType":"address","name":"recipient","type":"address"},{"indexed":false,"internalType":"uint32","name":"qty","type":"uint32"},{"indexed":false,"internalType":"uint32","name":"endBallId","type":"uint32"}],"name":"BallIssued","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint16","name":"seasonId","type":"uint16"},{"indexed":false,"internalType":"uint32","name":"revealGroupId","type":"uint32"}],"name":"CodeSeedRevealed","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint8","name":"version","type":"uint8"}],"name":"Initialized","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"owner","type":"address"}],"name":"OwnerTransfered","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint16","name":"seasonId","type":"uint16"},{"indexed":false,"internalType":"uint32","name":"revealGroupId","type":"uint32"},{"indexed":true,"internalType":"address","name":"requestor","type":"address"}],"name":"RevealRequested","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint16","name":"seasonId","type":"uint16"}],"name":"SeasonEnded","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint16","name":"seasonId","type":"uint16"}],"name":"SeasonStarted","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"operator","type":"address"}],"name":"SetOperator","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint16","name":"seasonId","type":"uint16"},{"indexed":false,"internalType":"uint32","name":"ballId","type":"uint32"}],"name":"WinnerPicked","type":"event"},{"inputs":[],"name":"DOMAIN_SEPARATOR","outputs":[{"internalType":"bytes32","name":"","type":"bytes32"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"ballCount","outputs":[{"internalType":"uint32","name":"","type":"uint32"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"","type":"uint256"}],"name":"ballGroups","outputs":[{"internalType":"uint32","name":"endBallId","type":"uint32"},{"internalType":"address","name":"owner","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint32","name":"","type":"uint32"},{"internalType":"uint256","name":"","type":"uint256"}],"name":"ballPosByRevealGroup","outputs":[{"internalType":"uint32","name":"","type":"uint32"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"endSeason","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint32","name":"ballId_","type":"uint32"}],"name":"getBallCode","outputs":[{"internalType":"uint32","name":"","type":"uint32"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint32","name":"ballId_","type":"uint32"}],"name":"getBallGroupPos","outputs":[{"internalType":"uint32","name":"","type":"uint32"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getBalls","outputs":[{"internalType":"uint32[]","name":"","type":"uint32[]"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"addr","type":"address"},{"internalType":"uint16","name":"seasonId","type":"uint16"}],"name":"getBalls","outputs":[{"internalType":"uint32[]","name":"","type":"uint32[]"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint32","name":"revealGroupId","type":"uint32"}],"name":"getBallsByRevealGroup","outputs":[{"internalType":"uint32[]","name":"","type":"uint32[]"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getCurrentBallGroupPos","outputs":[{"internalType":"uint32","name":"","type":"uint32"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getCurrentRevealGroupId","outputs":[{"internalType":"uint32","name":"","type":"uint32"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getCurrentSeasonId","outputs":[{"internalType":"uint16","name":"","type":"uint16"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getDomainInfo","outputs":[{"internalType":"string","name":"","type":"string"},{"internalType":"string","name":"","type":"string"},{"internalType":"uint256","name":"","type":"uint256"},{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"_user","type":"address"},{"internalType":"uint256","name":"_deadline","type":"uint256"},{"internalType":"uint256","name":"_nonce","type":"uint256"}],"name":"getEIP712Hash","outputs":[{"internalType":"bytes32","name":"","type":"bytes32"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getOperator","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getOwner","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getRelayMessageTypes","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"pure","type":"function"},{"inputs":[{"internalType":"uint32","name":"ballId_","type":"uint32"}],"name":"getRevealGroup","outputs":[{"internalType":"uint32","name":"","type":"uint32"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"_user","type":"address"},{"internalType":"uint16","name":"seasonId_","type":"uint16"}],"name":"getUserBallCount","outputs":[{"internalType":"uint32","name":"","type":"uint32"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"addr","type":"address"},{"internalType":"uint16","name":"seasonId","type":"uint16"}],"name":"getUserBallGroups","outputs":[{"internalType":"uint32[]","name":"","type":"uint32[]"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"isSeasonActive","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address[]","name":"_tos","type":"address[]"},{"internalType":"uint32[]","name":"_qty","type":"uint32[]"}],"name":"issueBalls","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"lastRequestId","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"newRevealPos","outputs":[{"internalType":"uint32","name":"","type":"uint32"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"_user","type":"address"}],"name":"nonces","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint32","name":"ballId_","type":"uint32"}],"name":"ownerOf","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"requestId","type":"uint256"},{"internalType":"uint256[]","name":"randomWords","type":"uint256[]"}],"name":"rawFulfillRandomWords","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"},{"internalType":"uint256","name":"deadline","type":"uint256"},{"internalType":"uint8","name":"v","type":"uint8"},{"internalType":"bytes32","name":"r","type":"bytes32"},{"internalType":"bytes32","name":"s","type":"bytes32"}],"name":"relayRequestReveal","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address[]","name":"users","type":"address[]"},{"internalType":"uint256[]","name":"deadlines","type":"uint256[]"},{"internalType":"uint8[]","name":"vs","type":"uint8[]"},{"internalType":"bytes32[]","name":"rs","type":"bytes32[]"},{"internalType":"bytes32[]","name":"ss","type":"bytes32[]"}],"name":"relayRequestRevealBatch","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"requestReveal","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"requestRevealGroupSeed","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint32","name":"","type":"uint32"}],"name":"revealGroupSeeds","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint32","name":"","type":"uint32"}],"name":"revealGroups","outputs":[{"internalType":"uint32","name":"","type":"uint32"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"revealNeeded","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"","type":"uint256"}],"name":"s_requests","outputs":[{"internalType":"bool","name":"exists","type":"bool"},{"internalType":"bool","name":"isSeasonPick","type":"bool"},{"internalType":"uint256","name":"seed","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint16","name":"","type":"uint16"}],"name":"seasons","outputs":[{"internalType":"uint16","name":"seasonId","type":"uint16"},{"internalType":"uint32","name":"startBallId","type":"uint32"},{"internalType":"uint32","name":"endBallId","type":"uint32"},{"internalType":"uint32","name":"winningBallId","type":"uint32"},{"internalType":"uint32","name":"winningCode","type":"uint32"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"_newOperator","type":"address"}],"name":"setOperator","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"startSeason","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_newOwner","type":"address"}],"name":"transferOwner","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"},{"internalType":"uint16","name":"","type":"uint16"},{"internalType":"uint256","name":"","type":"uint256"}],"name":"userBallGroups","outputs":[{"internalType":"uint32","name":"","type":"uint32"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"_user","type":"address"},{"internalType":"uint256","name":"_deadline","type":"uint256"},{"internalType":"uint256","name":"_nonce","type":"uint256"},{"internalType":"uint8","name":"v","type":"uint8"},{"internalType":"bytes32","name":"r","type":"bytes32"},{"internalType":"bytes32","name":"s","type":"bytes32"}],"name":"verifySig","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"versionCheck","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"pure","type":"function"}];
-const networkId = 80001
-const alchemyApiKey = process.env.ALCHEMY_API_KEY
-let provider
-let wallet
-let contract
-
-const getContract = async () => {
-  provider = new ethers.AlchemyProvider(networkId, alchemyApiKey)
-  let  rawWallet = ethers.HDNodeWallet.fromPhrase(readMnemonic())
-  wallet = rawWallet.connect(provider)
-  contract = new ethers.Contract(contractAddr, contractAbi, wallet)
-  return provider, wallet, contract
-}
-
-(async () => {
-  try {
-    await getContract()
-  } catch (err) {
-    console.log(err)
-  }
-})()
+//const testWords = 'skin ride electric require nest run wagon nose ritual mammal fossil canyon'
 
 const dbReset = () => {
   db.put('last-block', 1)
@@ -42,38 +20,25 @@ const getCode = (seed, ballId) => {
   if (code < 100000n) { code += 100000n }
   return Number(code)
 }
- 
+
 const downloadBalls = async (startBlock) => {
   if (!startBlock) startBlock = db.get('last-block')
   if (!startBlock) startBlock = 1
-  let endBlock = await provider.getBlockNumber() - 1
+  const endBlock = await provider.getBlockNumber() - 1
   console.log('downloadBalls will process up to block# ', endBlock)
 
-  let ballGroups = await contract.queryFilter('BallIssued', startBlock, endBlock)
-  ballGroups.forEach(group => {
-    let seasonId = Number(group.args.seasonId)
-    let owner = group.args.recipient
-    let qty = Number(group.args.qty)
-    let endBallId = Number(group.args.endBallId)
-    let startBallId = endBallId - qty + 1
-    let code = 0
-    let ownerSeasonKey = `owner-${owner}-${seasonId}`
-    let ballList = new Set(db.get(ownerSeasonKey) || [])
-    //console.log(startBallId)
-    //console.log(endBallId)
- 
-    for (i=startBallId; i <= endBallId; i++) {
-      let ballKey = `ball-${i}`
-      console.log(ballKey)
-      console.log(db.get(ballKey))
-      //if (!db.get(ballKey)) {
-        db.put(ballKey, {ballId: i, owner, seasonId, code }) 
-        ballList.add(i)
-      //}
-    }
-    db.put(ownerSeasonKey, Array.from(ballList.values()))
+  const ballGroups = await contract.queryFilter('BallIssued', startBlock, endBlock)
+  ballGroups.forEach(async group => {
+    const eventKey = `eventKey-${group.blockNumber}-${group.index}`
+    if (db.get(eventKey)) { return }
+
+    await handler_BallIssued(group)
+
+    db.put(eventKey, true)
   })
+
   await updateBallCodes(startBlock, endBlock);
+  await updateRevealRequestPending(startBlock, endBlock)
   db.put('last-block', endBlock)
   return true
 }
@@ -81,33 +46,31 @@ const downloadBalls = async (startBlock) => {
 const updateBallCodes = async (startBlock, endBlock) => {
   const revealGroups = await contract.queryFilter('CodeSeedRevealed', startBlock, endBlock)
   revealGroups.forEach(async group => {
-    const revealGroupId = group.args.revealGroupId
-    const revealedSeed = await contract.revealGroupSeeds(revealGroupId)
-    const ballIds = await contract.getBallsByRevealGroup(revealGroupId)
-    for (i=0; i<ballIds.length; i++) {
-      const ballId = Number(ballIds[i])
-      const ball = db.get(`ball-${ballId}`)
-      console.log(ball)
-      if (ball.code <= 0) {
-        ball.code = getCode(revealedSeed, ballId)
-        db.put(`ball-${ballId}`, ball)
-      }
-    }
-    return ballIds.length
+    const eventKey = `eventKey-${group.blockNumber}-${group.index}`
+    if (db.get(eventKey)) { return }
+    
+    handler_CodeSeedRevealed(group)
+
+    db.put(eventKey, true)
   })
 }
+const updateRevealRequestPending = async (startBlock, endBlock) => {
+  const requestGroups = await contract.queryFilter('RevealRequested', startBlock, endBlock)
+  requestGroups.forEach(async group => {
+    const eventKey = `eventKey-${group.blockNumber}-${group.index}`
+    console.log(eventKey)
+    if (db.get(eventKey)) { return }
+    
+    handler_RevealRequested(group)
 
-const getFeeOption = async () => {
-  const feeData =  await provider.getFeeData()
-  const maxFeePerGas = feeData.maxFeePerGas + ethers.parseUnits('5', 'gwei')
-  const maxPriorityFeePerGas = feeData.maxPriorityFeePerGas + ethers.parseUnits('3', 'gwei')
-  return { maxFeePerGas, maxPriorityFeePerGas }
+    db.put(eventKey, true)
+  })  
 }
 
 const relayRequestReveal = async (owner, deadline, v, r, s) => {
   
-  const feeOption = await getFeeOption()
-  const txid = (await contract.relayRequestReveal(owner, deadline, v, r, s, feeOption)).hash
+    const txid = (await contract.relayRequestReveal(owner, deadline, v, r, s)).hash
+  /*
   if (txid) {
     const seasonId = await contract.getCurrentSeasonId()
     const myBalls = db.get(`owner-${owner}-${seasonId}`)
@@ -119,6 +82,7 @@ const relayRequestReveal = async (owner, deadline, v, r, s) => {
       }
     }
   }
+  */
   return txid
 }
 
@@ -130,10 +94,19 @@ const getSeason = async (seasonId) => {
   seasonId = seasonId || await getCurrentSeasonId()
   const data = await contract.seasons(seasonId)
   const startBallId = Number(data[1])
-  const endBallId = Number(data[2])
+  let endBallId = Number(data[2])
   const winningBallId = Number(data[3])
   const winningCode = Number(data[4])
-  return { seasonId, startBallId, endBallId, winningBallId, winningCode }
+  let isActive
+  if (winningBallId == 0) {
+    isActive = true
+  } else {
+    isActive = false
+  }
+  if (endBallId == 0) {
+    endBallId = Number(await contract.ballCount())
+  }
+  return { seasonId, startBallId, endBallId, winningBallId, winningCode, isActive }
 }
 
 const getUserBalls = async (userAddr, seasonId) => {
@@ -201,6 +174,12 @@ const startSeason = async () => {
   //return seasonId
 }
 
+const endSeason = async () => {
+  return (await contract.endSeason()).hash
+  //const seasonId = await contract.getCurrentSeasonId()
+  //return seasonId
+}
+
 const issueBalls = async (addrList, qtyList) => {
   const txid = (await contract.issueBalls(addrList, qtyList)).hash
   //downloadBalls()
@@ -250,9 +229,7 @@ const requestRevealGroupSeed = async () => {
   if (!isRevealNeeded) {
     return 
   }
-  const feeOption = await getFeeOption()
-  const txid = (await contract.requestRevealGroupSeed(feeOption)).hash
-  //downloadBalls()
+  const txid = (await contract.requestRevealGroupSeed()).hash
   console.log('requestRevealGroupSeed is executed ', txid)
   return txid
 }
@@ -268,10 +245,151 @@ const splitSig = (sig) => {
   return {r: "0x" + sig.slice(0, 64), s: "0x" + sig.slice(64, 128), v: parseInt(sig.slice(128, 130), 16)};
 }
 
-const testWords = 'skin ride electric require nest run wagon nose ritual mammal fossil canyon'
+//Event Subscription with Websock provider
 
-const returnWallet = () => {
-  return wallet
+let providerWs
+let contractWs 
+
+const startEventSubscription = () => {
+
+
+  const EXPECTED_PONG_BACK = 3*1000
+  const KEEP_ALIVE_CHECK_INTERVAL = 60*1000
+  const RESTART_WAIT = 1.5*1000
+
+  providerWs = new ethers.WebSocketProvider(alchemyWs)
+  contractWs = new ethers.Contract(contractAddr, contractAbi, providerWs)
+
+  contractWs.on("*", (event) => {
+      //console.log(event)
+      eventHandler(event)
+      //result = event
+  })  
+
+  let pingTimeout = null
+  let keepAliveInterval = null
+
+  providerWs.websocket.on('open', () => {
+    keepAliveInterval = setInterval(() => {
+      console.log('Checking if the connection is alive, sending a ping')
+      providerWs.websocket.ping()
+      pingTimeout = setTimeout(() => {
+        providerWs.websocket.terminate()
+      }, EXPECTED_PONG_BACK)
+    }, KEEP_ALIVE_CHECK_INTERVAL)
+  })
+
+  providerWs.websocket.on("error", async () => {
+    console.log(`Unable to connect retrying in 3s...`);
+    clearInterval(keepAliveInterval)
+    clearTimeout(pingTimeout)
+    contract.removeAllListeners()
+    setTimeout(startEventSubscription, RESTART_WAIT);
+  });
+
+  providerWs.websocket.on('close', () => {
+    console.log('The websocket connection was closed')
+
+    clearInterval(keepAliveInterval)
+    clearTimeout(pingTimeout)
+    contractWs.removeAllListeners()
+    setTimeout(startEventSubscription, RESTART_WAIT);
+  })
+
+  providerWs.websocket.on('pong', () => {
+    console.log('Received pong, so connection is alive, clearing the timeout')
+    clearInterval(pingTimeout)
+  })
+}
+
+const eventHandler = async (e) => {
+  const eventKey = `eventKey-${e.log.blockNumber}-${e.log.index}`
+  console.log(eventKey)
+  if (db.get(eventKey)) { return false }
+  
+  if (e.eventName == 'BallIssued') {
+
+    await handler_BallIssued(e)
+
+  } else if (e.eventName == 'CodeSeedRevealed') {
+
+    handler_CodeSeedRevealed(e)
+
+  } else if (e.eventName == 'RevealRequested') {
+
+    handler_RevealRequested(e)
+    
+  } else if (e.eventName == 'SeasonStarted') {    
+
+    console.log("new season started")
+
+  } else if (e.eventName == 'SeasonEnded') {        
+
+    console.log("The current season ended")
+
+  } else if (e.eventName == 'WinnerPicked') {   
+
+    console.log("The season winnerId Picked")
+
+  } else {
+
+  }
+  db.put(eventKey, true)
+}
+
+const handler_BallIssued = async (e) => {
+
+  //result = e
+
+  const seasonId = Number(e.args.seasonId)
+  const owner = e.args.recipient
+  const qty = Number(e.args.qty)
+  const endBallId = Number(e.args.endBallId)
+  const startBallId = endBallId - qty + 1
+  const code = 0
+  const ownerSeasonKey = `owner-${owner}-${seasonId}`
+  const ballList = new Set(db.get(ownerSeasonKey) || [])
+
+  for (i=startBallId; i <= endBallId; i++) {
+    const ballKey = `ball-${i}`
+    //console.log(ballKey)
+    db.put(ballKey, {ballId: i, owner, seasonId, code }) 
+    ballList.add(i)
+  }
+  db.put(ownerSeasonKey, Array.from(ballList.values()))
+
+}
+
+const handler_CodeSeedRevealed = async (e) => {
+  const revealGroupId = e.args.revealGroupId
+  const revealedSeed = await contract.revealGroupSeeds(revealGroupId)
+  const ballIds = await contract.getBallsByRevealGroup(revealGroupId)
+  for (i=0; i <ballIds.length; i++) {
+    const ballId = Number(ballIds[i])
+    const ball = db.get(`ball-${ballId}`)
+    if (ball.code <= 0) {
+      ball.code = getCode(revealedSeed, ballId)
+      db.put(`ball-${ballId}`, ball)
+    }
+  }
+}
+
+const handler_RevealRequested = async (e) => {
+  const owner = e.args.requestor
+  const seasonId = e.args.seasonId
+  const endBallId = e.args.endBallId
+  const myBalls = db.get(`owner-${owner}-${seasonId}`)
+  console.log('ball length is ', myBalls.length)
+  for (i = 0; i < myBalls.length; i++) {
+    const ballId = myBalls[i]
+    const ball = db.get(`ball-${ballId}`)
+    if (ball.code == 0 && ballId <= endBallId) {
+      ball.code = -1
+      db.put(`ball-${ballId}`, ball)
+    } else if (ballId > endBallId) {
+      return
+    }
+  }
 }
 
 module.exports = { 
@@ -282,11 +400,12 @@ module.exports = {
   updateBallCodes, 
   getUserBalls,
   getSeason,
+  endSeason,
   relayRequestReveal,
   startSeason,
   issueBalls,
   getRelayData,
   isRevealNeededUser,
-  returnWallet,
-  requestRevealGroupSeed
+  requestRevealGroupSeed,
+  startEventSubscription
 }

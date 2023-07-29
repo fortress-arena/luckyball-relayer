@@ -22,7 +22,7 @@ const saveMnemonic = (mnemonic) => {
   const key = keyStore.get({ kid: 'encrypt' })
   const encryptedTxt = JWE.encrypt(mnemonic, key)
   updateDotenv({ MNEMONIC_ENC: encryptedTxt })
-  return encyptedTxt
+  return encryptedTxt
 }
 
 const readMnemonic = () => {

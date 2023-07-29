@@ -65,20 +65,13 @@ const getUserBalls = async () => {
   return await apiGet(apiHost, 'getUserBalls', data)
   /*
   https://gateway-ipfs.atomrigs.io/luckyball/api/getUserBalls?owner=0x7BEABB9798B093B2A6246f1b748407C901Be5aeF
-  {
-    data: [
-      { ballId: 1, code: 0, matchCount: 0 },
-      { ballId: 2, code: 0, matchCount: 0 },
-      { ballId: 3, code: 0, matchCount: 0 },
-      { ballId: 4, code: 0, matchCount: 0 },
-      { ballId: 5, code: 0, matchCount: 0 },
-      { ballId: 6, code: 0, matchCount: 0 },
-      { ballId: 7, code: 0, matchCount: 0 },
-      { ballId: 8, code: 0, matchCount: 0 },
-      { ballId: 9, code: 0, matchCount: 0 },
-      { ballId: 10, code: 0, matchCount: 0 }
-    ]
-  }
+
+  {"data":{"seasonId":1,"total":44,"unrevealCount":14,"revealPendingCount":0,"matchSum":[27,3,0,0,0,0,0],"seasonWinBallId":0,"isSeasonWin":false,
+  "ballList":[[151,549003,0],[152,728774,1],[153,660518,0],[154,779147,0],[155,333613,0],[156,433725,0],[157,334998,0],[158,274857,0],
+  [159,112867,0],[160,348573,0],[161,757014,1],[162,757326,0],[163,828618,0],[164,434583,0],[165,719918,0],[166,891574,1],[167,884807,0],
+  [168,567633,0],[169,307997,0],[170,530117,0],[171,903220,0],[172,429573,0],[173,632666,0],[174,358080,0],[175,116371,0],[176,960550,0],
+  [177,488515,0],[178,332382,0],[179,306741,0],[180,101479,0],[242,0,0],[244,0,0],[246,0,0],[248,0,0],[249,0,0],[250,0,0],[251,0,0],[252,0,0],
+  [253,0,0],[254,0,0],[255,0,0],[256,0,0],[257,0,0],[258,0,0]]}}
   */
 }
 

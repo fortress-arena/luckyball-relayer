@@ -38,7 +38,7 @@ const verifyAccessToken = async (token) => {
   }
 }
 
-const protected = async (req, res, next) => {
+const protectedAccess = async (req, res, next) => {
   const authHeader = req.headers['authorization']
   const token = authHeader && authHeader.split(' ')[1] 
   if (token == null) return res.status(401).json({ err: 'No access token found'})
@@ -64,6 +64,6 @@ const protectedRefresh = async (req, res, next) => {
 module.exports = {
   generateAccessToken,
   verifyAccessToken,
-  protected,
+  protectedAccess,
   protectedRefresh
 }

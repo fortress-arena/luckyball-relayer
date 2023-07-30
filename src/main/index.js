@@ -13,9 +13,25 @@ let { networkId, provider, wallet, contract, alchemyWs, contractAbi, contractAdd
 const dbReset = () => {
   db.put('last-block', 1)
 }
+/*
+    function getBallCode(uint32 ballId_) public view returns (uint32) {
+        uint256 randSeed = revealGroupSeeds[getRevealGroup(ballId_)];
+        if (randSeed > 0) {
+            return extractCode(uint(keccak256(abi.encodePacked(randSeed, ballId_))));
+        }
+        return uint32(0);
+    }
 
+    function extractCode(uint256 n) internal pure returns (uint32) {
+        uint256 r = n % 1000000;
+        if (r < 100000) { r += 100000; }
+        return uint32(r);
+    } 
+
+
+*/
 const getCode = (seed, ballId) => {
-  const codeInt = ethers.toBigInt(ethers.solidityPackedKeccak256(["uint256","uint256"], [seed, ballId]))
+  const codeInt = ethers.toBigInt(ethers.solidityPackedKeccak256(["uint256","uint32"], [seed, ballId]))
   let code = codeInt % 1000000n
   if (code < 100000n) { code += 100000n }
   return Number(code)
@@ -93,20 +109,33 @@ const getCurrentSeasonId = async () => {
 const getSeason = async (seasonId) => {
   seasonId = seasonId || await getCurrentSeasonId()
   const data = await contract.seasons(seasonId)
-  const startBallId = Number(data[1])
+  let startBallId = Number(data[1])
   let endBallId = Number(data[2])
-  const winningBallId = Number(data[3])
-  const winningCode = Number(data[4])
+  let winningBallId = Number(data[3])
+  let winningCode = Number(data[4])
   let isActive
-  if (winningBallId == 0) {
+  let seasonBallCount = endBallId - startBallId + 1
+
+  if (winningCode == 0) {
+    return {}
+  }
+
+  if (winningBallId == 0 && winningCode > 0) {
     isActive = true
   } else {
     isActive = false
   }
   if (endBallId == 0) {
-    endBallId = Number(await contract.ballCount())
+    if (!db.get(`ball-${startBallId}`)) {
+      startBallId = 0
+      seasonBallCount = 0
+    } else {
+      endBallId = Number(await contract.ballCount()) 
+      seasonBallCount = endBallId - startBallId + 1
+    }
   }
-  return { seasonId, startBallId, endBallId, winningBallId, winningCode, isActive }
+  
+  return { seasonId, seasonBallCount, startBallId, endBallId, winningBallId, winningCode, isActive }
 }
 
 const getUserBalls = async (userAddr, seasonId) => {
@@ -211,12 +240,12 @@ const getRelayData = async (address) => {
 }
 
 const isRevealNeededUser = async (address) => {
-  const seansonId = await contract.getCurrentSeasonId()
-  const myGroups = await contract.getUserBallGroups(address, seansonId)
+  const seasonId = await contract.getCurrentSeasonId()
+  const myGroups = await contract.getUserBallGroups(address, seasonId)
   if (myGroups.length == 0) {
     return false
   }
-  const newPos = await contract.newRevealPos(address)
+  const newPos = await contract.newRevealPos(address, seasonId)
   if (myGroups.length > newPos) {
     return true
   }

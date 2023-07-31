@@ -90,7 +90,7 @@ const getUserBalls = async (owner, seasonId) => {
 
   //
   total = unrevealCount + revealPendingCount + sum(matchSum)
-  
+
   matchSum":[27,3,0,0,0,0,0] ==>
   no ball match : 27
   1 ball match: 3
@@ -141,6 +141,7 @@ const generateRelaySig = async (wallet) => {
   wallet = wallet || user1
   const sigData = (await apiCall(apiHost, 'get', 'getRelayData', { owner: wallet.address })).data
   const rawSig = await wallet.signTypedData(sigData.domain, sigData.types, sigData.relayData)
+  console.log(rawSig)
   const sig = splitSig(rawSig)
   return { owner: wallet.address, 
            deadline: sigData.relayData.deadline,
@@ -202,7 +203,7 @@ const startSeason = async (refreshToken) => {
   const accessToken = (await genAccessToken(refreshToken)).data
   return await apiCall(apiHost, 'post', 'startSeason', null, accessToken)
   /*
-  await startSeason(REFRESH_TOKEN)
+  await startSeason(accessToken)
 
   RETURNS
   {
@@ -219,7 +220,7 @@ const endSeason = async(refreshToken) => {
   return await apiCall(apiHost, 'post', 'endSeason', null, accessToken)
 
   /*
-  await endSeason(REFRESH_TOKEN)
+  await endSeason(accessToken)
 
   RETURNS
   {
@@ -236,7 +237,7 @@ const issueBalls = async(addrList, qtyList, refreshToken) => {
   return await apiCall(apiHost, 'post', 'issueBalls', data, accessToken )
   /*
   await issueBalls(["0x7BEABB9798B093B2A6246f1b748407C901Be5aeF","0x28cbb23A737E8562E7A446804b0D2458e1A3D0A7"], 
-                  [20,20], REFRESH_TOKEN)
+                  [20,20], accessToken)
 
   Returns 
   {
@@ -252,7 +253,7 @@ const requestRevealGroupSeed = async(refreshToken) => {
   return await apiCall(apiHost, 'post', 'requestRevealGroupSeed', null, accessToken )
 
   /*
-  await requestRevealGroupSeed(refreshToken)
+  await requestRevealGroupSeed(accessToken)
 
   RETURNS
   {

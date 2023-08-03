@@ -32,11 +32,6 @@ app.use(morgan('dev', {
 }))
 app.use(morgan('combined', { stream: accessLogStream }, { flags: 'a' }))
 
-
-app.get('/', (req, res) => {
-  res.send('Hello World!')
-})
-
 app.get('/luckyball/api/ping', async (req, res, next) => {
   try {
     res.json({ data: 'pong' })
@@ -102,8 +97,18 @@ app.post('/luckyball/api/relayRequestReveal', async (req, res, next) => {
     next(err)
   }
 })
-  
 
+app.get('/luckyball/api/getRevealTime', async (req, res, next) => {
+  try {
+    const data = await main.nextRevealTime()
+    res.json({ data })
+
+  } catch(err) {
+    res.status(400).send({ err: err.message })
+    next(err)
+  }
+})
+  
 //admin features
 
 app.post('/luckyball/api/genAccessToken', auth.protectedRefresh, async (req, res, next) => {
@@ -114,18 +119,6 @@ app.post('/luckyball/api/genAccessToken', auth.protectedRefresh, async (req, res
     } else {
       res.status(401).json({ err: 'A valid refreshToken is needed'})  
     }
-  } catch(err) {
-    res.status(400).json({ err: err.message })
-    next(err)
-  }
-})
-
-app.get('/luckyball/api/protected', auth.protectedAccess, (req, res, next) => {
-  try {
-    const authHeader = req.headers['authorization']
-    const token = authHeader && authHeader.split(' ')[1]    
-    res.json({ data: token })
-
   } catch(err) {
     res.status(400).json({ err: err.message })
     next(err)
@@ -177,22 +170,5 @@ app.post('/luckyball/api/endSeason', auth.protectedAccess, async (req, res, next
     next(err)
   }
 })
-
-
-//const cronDownloadBalls = cron.schedule('* * * * *', function() {
-//  main.downloadBalls()
-//  console.log('running downloadBalls every minute');
-//})
-
-//const cronRequestRevealGroupSeed = cron.schedule('0 */2 * * *', function() {
-//  main.requestRevealGroupSeed()
-//  console.log('running requestRevealGroupSeed every 2 hours');
-//}) 
-//moved to indexer.js
-
-
-//app.listen(port, () => {
-//  console.log(`LuckyBall Relay/Operator server listening at ${port}`)
-//})
 
 module.exports = app

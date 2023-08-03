@@ -7,8 +7,8 @@ const axios = require("axios");
 
 require('dotenv').config({ path: require('find-config')('.env') })
 
-
 const REVEAL_SCHEDULE = '* * * * *' //every 2 hour (even hour)
+//const REVEAL_SCHEDULE = '0 */2 * * *' //every 2 hour (even hour)
 const DOWNLOAD_SCHEDULE = '0/10 * * * *' //every 10 mintes
 
 let networkId

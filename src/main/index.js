@@ -3,9 +3,9 @@ const srcDir = require('find-config')('src')
 //const sleep = require('util').promisify(setTimeout)
 const { readMnemonic } = require(srcDir + '/keyman')
 const db = require(srcDir + '/db')
-
 require('dotenv').config({ path: require('find-config')('.env') })
-let { networkId, provider, wallet, contract, alchemyWs, contractAbi, contractAddr } = require(srcDir + '/config')
+const parser = require('cron-parser')
+let { networkId, provider, wallet, contract, alchemyWs, contractAbi, contractAddr, REVEAL_SCHEDULE } = require(srcDir + '/config')
 //let config = require(srcDir + '/config')
 
 //const testWords = 'skin ride electric require nest run wagon nose ritual mammal fossil canyon'
@@ -13,92 +13,9 @@ let { networkId, provider, wallet, contract, alchemyWs, contractAbi, contractAdd
 const dbReset = () => {
   db.put('last-block', 1)
 }
-/*
-    function getBallCode(uint32 ballId_) public view returns (uint32) {
-        uint256 randSeed = revealGroupSeeds[getRevealGroup(ballId_)];
-        if (randSeed > 0) {
-            return extractCode(uint(keccak256(abi.encodePacked(randSeed, ballId_))));
-        }
-        return uint32(0);
-    }
-
-    function extractCode(uint256 n) internal pure returns (uint32) {
-        uint256 r = n % 1000000;
-        if (r < 100000) { r += 100000; }
-        return uint32(r);
-    } 
-
-
-*/
-const getCode = (seed, ballId) => {
-  const codeInt = ethers.toBigInt(ethers.solidityPackedKeccak256(["uint256","uint32"], [seed, ballId]))
-  let code = codeInt % 1000000n
-  if (code < 100000n) { code += 100000n }
-  return Number(code)
-}
-
-const downloadBalls = async (startBlock) => {
-  if (!startBlock) startBlock = db.get('last-block')
-  if (!startBlock) startBlock = 1
-  const endBlock = await provider.getBlockNumber() - 1
-  console.log('downloadBalls will process up to block# ', endBlock)
-
-  const ballGroups = await contract.queryFilter('BallIssued', startBlock, endBlock)
-  ballGroups.forEach(async group => {
-    const eventKey = `eventKey-${group.blockNumber}-${group.index}`
-    if (db.get(eventKey)) { return }
-
-    await handler_BallIssued(group)
-
-    db.put(eventKey, true)
-  })
-
-  await updateBallCodes(startBlock, endBlock);
-  await updateRevealRequestPending(startBlock, endBlock)
-  db.put('last-block', endBlock)
-  return true
-}
-
-const updateBallCodes = async (startBlock, endBlock) => {
-  const revealGroups = await contract.queryFilter('CodeSeedRevealed', startBlock, endBlock)
-  revealGroups.forEach(async group => {
-    const eventKey = `eventKey-${group.blockNumber}-${group.index}`
-    if (db.get(eventKey)) { return }
-    
-    handler_CodeSeedRevealed(group)
-
-    db.put(eventKey, true)
-  })
-}
-const updateRevealRequestPending = async (startBlock, endBlock) => {
-  const requestGroups = await contract.queryFilter('RevealRequested', startBlock, endBlock)
-  requestGroups.forEach(async group => {
-    const eventKey = `eventKey-${group.blockNumber}-${group.index}`
-    console.log(eventKey)
-    if (db.get(eventKey)) { return }
-    
-    handler_RevealRequested(group)
-
-    db.put(eventKey, true)
-  })  
-}
 
 const relayRequestReveal = async (owner, deadline, v, r, s) => {
-  
-    const txid = (await contract.relayRequestReveal(owner, deadline, v, r, s)).hash
-  /*
-  if (txid) {
-    const seasonId = await contract.getCurrentSeasonId()
-    const myBalls = db.get(`owner-${owner}-${seasonId}`)
-    for (i = 0; i < myBalls.length; i++) {
-      const ball = myBalls[i]
-      if (ball.code == 0) {
-        ball.code = -1
-        db.set(`ball-${i}`, ball)
-      }
-    }
-  }
-  */
+  const txid = (await contract.relayRequestReveal(owner, deadline, v, r, s)).hash
   return txid
 }
 
@@ -274,6 +191,16 @@ const splitSig = (sig) => {
   return {r: "0x" + sig.slice(0, 64), s: "0x" + sig.slice(64, 128), v: parseInt(sig.slice(128, 130), 16)};
 }
 
+const nextRevealTime = (cronSchedule) => {
+  cronSchedule = cronSchedule || REVEAL_SCHEDULE
+  const target = parser.parseExpression(cronSchedule).next()
+  target.setSeconds(10) //adding 10 seconds
+  const timestamp = Math.floor(target.getTime()/1000)
+  const toString = target.toISOString()
+  const secondsLeft = Math.floor(timestamp - Date.now()/1000)
+  return { timestamp, toString, secondsLeft }
+}
+
 //Event Subscription with Websock provider
 
 let providerWs
@@ -421,6 +348,59 @@ const handler_RevealRequested = async (e) => {
   }
 }
 
+const getCode = (seed, ballId) => {
+  const codeInt = ethers.toBigInt(ethers.solidityPackedKeccak256(["uint256","uint32"], [seed, ballId]))
+  let code = codeInt % 1000000n
+  if (code < 100000n) { code += 100000n }
+  return Number(code)
+}
+
+const downloadBalls = async (startBlock) => {
+  if (!startBlock) startBlock = db.get('last-block')
+  if (!startBlock) startBlock = 1
+  const endBlock = await provider.getBlockNumber() - 1
+  console.log('downloadBalls will process up to block# ', endBlock)
+
+  const ballGroups = await contract.queryFilter('BallIssued', startBlock, endBlock)
+  ballGroups.forEach(async group => {
+    const eventKey = `eventKey-${group.blockNumber}-${group.index}`
+    if (db.get(eventKey)) { return }
+
+    await handler_BallIssued(group)
+
+    db.put(eventKey, true)
+  })
+
+  await updateBallCodes(startBlock, endBlock);
+  await updateRevealRequestPending(startBlock, endBlock)
+  db.put('last-block', endBlock)
+  return true
+}
+
+const updateBallCodes = async (startBlock, endBlock) => {
+  const revealGroups = await contract.queryFilter('CodeSeedRevealed', startBlock, endBlock)
+  revealGroups.forEach(async group => {
+    const eventKey = `eventKey-${group.blockNumber}-${group.index}`
+    if (db.get(eventKey)) { return }
+    
+    handler_CodeSeedRevealed(group)
+
+    db.put(eventKey, true)
+  })
+}
+const updateRevealRequestPending = async (startBlock, endBlock) => {
+  const requestGroups = await contract.queryFilter('RevealRequested', startBlock, endBlock)
+  requestGroups.forEach(async group => {
+    const eventKey = `eventKey-${group.blockNumber}-${group.index}`
+    console.log(eventKey)
+    if (db.get(eventKey)) { return }
+    
+    handler_RevealRequested(group)
+
+    db.put(eventKey, true)
+  })  
+}
+
 module.exports = { 
   provider, 
   wallet, 
@@ -436,5 +416,7 @@ module.exports = {
   getRelayData,
   isRevealNeededUser,
   requestRevealGroupSeed,
-  startEventSubscription
+  startEventSubscription,
+  nextRevealTime
 }
+

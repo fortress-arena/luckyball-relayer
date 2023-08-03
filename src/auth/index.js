@@ -4,6 +4,7 @@ const srcDir = require('find-config')('src')
 const { readJwtPrivateKey, readJwtPublicKey } = require(srcDir + '/keyman')
 const db = require(srcDir + '/db')
 const JWT_EXP = 60*60
+
 const generateAccessToken = (user, exp) => {
   exp = exp || JWT_EXP
   return jwt.sign(

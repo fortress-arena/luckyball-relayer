@@ -22,12 +22,12 @@ main.downloadBalls()
 //fallback when subscrition fails
 const cronDownloadBalls = cron.schedule(DOWNLOAD_SCHEDULE, function() {
   main.downloadBalls()
-  console.log('running downloadBalls every 10 minutes');
+  console.log('running downloadBalls every 10 minutes')
 })
 
 const cronRequestRevealGroupSeed = cron.schedule(REVEAL_SCHEDULE, function() {
     main.requestRevealGroupSeed()
-  console.log('running requestRevealGroupSeed every 2 hours');
+  console.log('running requestRevealGroupSeed every 2 hours')
 })
 
 main.startEventSubscription() 

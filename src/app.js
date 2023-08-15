@@ -1,7 +1,7 @@
 const express = require('express')
 const app = express()
 const cors = require('cors')
-//const cron = require('node-cron');
+//const cron = require('node-cron')
 const ethers = require('ethers')
 const srcDir = require('find-config')('src')
 const bodyParser = require('body-parser')
@@ -90,7 +90,7 @@ app.post('/luckyball/api/relayRequestReveal', async (req, res, next) => {
       return res.status(400).json({ err: 'This address has no ball to reveal yet'})
     }
     const txid = await main.relayRequestReveal(owner, deadline, v, r, s)
-    res.json({ data: { txid } })
+    res.json({ data:  txid  })
 
   } catch (err) {
     res.status(400).json({ err: err.message })
@@ -129,7 +129,7 @@ app.post('/luckyball/api/startSeason', auth.protectedAccess, async (req, res, ne
   try {
     const txid = await main.startSeason()
 
-    res.json({data: { txid }})    
+    res.json({ data: txid })    
   } catch(err) {
     res.status(400).json({ err: err.message })
     next(err)
@@ -140,7 +140,7 @@ app.post('/luckyball/api/issueBalls', auth.protectedAccess, async (req, res, nex
   try {
     const { addrList, qtyList } = req.body
     const txid = await main.issueBalls(addrList, qtyList)
-    res.json({ data: { txid } })    
+    res.json({ data: txid })    
   } catch(err) {
     res.status(400).json({ err: err.message })
     next(err)
@@ -153,7 +153,7 @@ app.post('/luckyball/api/requestRevealGroupSeed', auth.protectedAccess, async (r
     if (!txid) {
       return res.status(400).json({ err: 'Nohting to reveal'})
     }
-    res.json({ data: { txid } })    
+    res.json({ data: txid })    
   } catch(err) {
     res.status(400).json({ err: err.message })
     next(err)
@@ -164,7 +164,7 @@ app.post('/luckyball/api/endSeason', auth.protectedAccess, async (req, res, next
   try {
     const txid = await main.endSeason()
 
-    res.json({data: { txid }})    
+    res.json({ data: txid })    
   } catch(err) {
     res.status(400).json({ err: err.message })
     next(err)

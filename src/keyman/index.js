@@ -2,8 +2,8 @@ const { JWKS, JWE } = require('jose')
 const updateDotenv = require('update-dotenv')
 require('dotenv').config({ path: require('find-config')('.env') })
 
-const { generateKeyPairSync, createPublicKey } = require('crypto');
-const jwt = require('jsonwebtoken');
+const { generateKeyPairSync, createPublicKey } = require('crypto')
+const jwt = require('jsonwebtoken')
 
 //process.env.INFURA_API_KEY
 //process.env.MNEMONIC_ENC
@@ -70,9 +70,22 @@ const genRSKeyPair = () => {
   })
 }
 
+const saveWalletRefreshToken = (token) => {
+  const key = keyStore.get({ kid: 'encrypt' })
+  const encryptedTxt = JWE.encrypt(token, key)
+  updateDotenv({ WALLET_REFRESH_TOKEN: encryptedTxt })
+}
+
+const readWalletRefreshToken = () => {
+  const encryptedTxt = process.env.WALLET_REFRESH_TOKEN
+  const key = keyStore.get({ kid: 'encrypt' })
+  return JWE.decrypt(encryptedTxt, key).toString()  
+}
+
 module.exports = { 
   readMnemonic, 
   readJwtPrivateKey,
-  readJwtPublicKey
+  readJwtPublicKey,
+  readWalletRefreshToken
 }
 

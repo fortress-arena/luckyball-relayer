@@ -1,4 +1,4 @@
-const jwt = require('jsonwebtoken');
+const jwt = require('jsonwebtoken')
 require('dotenv').config({ path: require('find-config')('.env') })
 const srcDir = require('find-config')('src')
 const { readJwtPrivateKey, readJwtPublicKey } = require(srcDir + '/keyman')
@@ -63,6 +63,7 @@ const protectedRefresh = async (req, res, next) => {
 }
 
 module.exports = {
+  generateRefreshToken,
   generateAccessToken,
   verifyAccessToken,
   protectedAccess,

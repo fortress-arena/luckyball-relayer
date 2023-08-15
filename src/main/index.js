@@ -1,22 +1,51 @@
 const ethers = require('ethers')
+const jwt = require('jsonwebtoken')
+const axios = require('axios')
 const srcDir = require('find-config')('src')
 //const sleep = require('util').promisify(setTimeout)
 const { readMnemonic } = require(srcDir + '/keyman')
 const db = require(srcDir + '/db')
 require('dotenv').config({ path: require('find-config')('.env') })
 const parser = require('cron-parser')
-let { networkId, provider, wallet, contract, alchemyWs, contractAbi, contractAddr, REVEAL_SCHEDULE } = require(srcDir + '/config')
+let { networkId, provider, wallet, contract, alchemyWs, contractAbi, 
+  contractAddr, REVEAL_SCHEDULE, walletRefreshToken, walletApi } = require(srcDir + '/config')
 //let config = require(srcDir + '/config')
 
 //const testWords = 'skin ride electric require nest run wagon nose ritual mammal fossil canyon'
+let walletAccessToken
 
 const dbReset = () => {
   db.put('last-block', 1)
 }
 
+const getWalletAccessToken = async(refreshToken) => {
+  if(walletAccessToken && jwt.decode(walletAccessToken).exp > Date.now()/1000 + 10) {
+    return walletAccessToken
+  } 
+  refreshToken = refreshToken || walletRefreshToken
+  if(jwt.decode(refreshToken).exp < Date.now()/1000) {
+    throw('Wallet refresh token expired')
+  }
+
+  walletAccessToken = (await axios.post(
+    walletApi + 'genAccessToken', {}, 
+    { headers: { Authorization: `Bearer ${refreshToken}` }}
+  )).data.accessToken
+  return walletAccessToken
+}
+
+const sendTransaction = async (txData) => {
+  return (await axios.post(
+    walletApi + 'sendTransaction', 
+    { networkId, txData }, 
+    { headers: { Authorization: `Bearer ${await getWalletAccessToken()}`, 
+                 'Content-Type': 'application/json' }}
+  )).data  
+}
+
 const relayRequestReveal = async (owner, deadline, v, r, s) => {
-  const txid = (await contract.relayRequestReveal(owner, deadline, v, r, s)).hash
-  return txid
+  const txData = await contract.relayRequestReveal.populateTransaction(owner, deadline, v, r, s)
+  return await sendTransaction(txData)
 }
 
 const getCurrentSeasonId = async () => {  
@@ -30,17 +59,11 @@ const getSeason = async (seasonId) => {
   let endBallId = Number(data[2])
   let winningBallId = Number(data[3])
   let winningCode = Number(data[4])
-  let isActive
+  let isActive = data[5]
   let seasonBallCount = endBallId - startBallId + 1
 
   if (winningCode == 0) {
     return {}
-  }
-
-  if (winningBallId == 0 && winningCode > 0) {
-    isActive = true
-  } else {
-    isActive = false
   }
   if (endBallId == 0) {
     if (!db.get(`ball-${startBallId}`)) {
@@ -115,21 +138,26 @@ const compareCodes = (codeA, codeB) => {
 }
 
 const startSeason = async () => {
-  return (await contract.startSeason()).hash
-  //const seasonId = await contract.getCurrentSeasonId()
-  //return seasonId
+  const txData = await contract.startSeason.populateTransaction()
+  return await sendTransaction(txData)
 }
 
 const endSeason = async () => {
-  return (await contract.endSeason()).hash
-  //const seasonId = await contract.getCurrentSeasonId()
-  //return seasonId
+  const txData = await contract.endSeason.populateTransaction()
+  return await sendTransaction(txData)
+  /*const txid  = (await axios.post(
+    walletApi + 'sendTransaction', 
+    { networkId, txData }, 
+    { headers: { Authorization: `Bearer ${await getWalletAccessToken()}`, 
+                 'Content-Type': 'application/json' }}
+  )).data
+  return txid  
+  */
 }
 
 const issueBalls = async (addrList, qtyList) => {
-  const txid = (await contract.issueBalls(addrList, qtyList)).hash
-  //downloadBalls()
-  return txid
+  const txData = await contract.issueBalls.populateTransaction(addrList, qtyList)
+  return sendTransaction(txData)
 }
 
 const getRelayData = async (address) => {
@@ -175,9 +203,8 @@ const requestRevealGroupSeed = async () => {
   if (!isRevealNeeded) {
     return 
   }
-  const txid = (await contract.requestRevealGroupSeed()).hash
-  console.log('requestRevealGroupSeed is executed ', txid)
-  return txid
+  const txData = contract.requestRevealGroupSeed.populateTransaction()
+  return await sendTransaction(txData)
 }
 
 const combineSig = (v, r, s) => {
@@ -248,7 +275,7 @@ const startEventSubscription = () => {
 
     clearInterval(keepAliveInterval)
     clearTimeout(pingTimeout)
-    contractWs.removeAllListeners()
+    contract.removeAllListeners()
     setTimeout(startEventSubscription, RESTART_WAIT);
   })
 
@@ -260,7 +287,7 @@ const startEventSubscription = () => {
 
 const eventHandler = async (e) => {
   const eventKey = `eventKey-${e.log.blockNumber}-${e.log.index}`
-  console.log(eventKey)
+  //console.log(eventKey)
   if (db.get(eventKey)) { return false }
   
   if (e.eventName == 'BallIssued') {
@@ -417,6 +444,7 @@ module.exports = {
   isRevealNeededUser,
   requestRevealGroupSeed,
   startEventSubscription,
-  nextRevealTime
+  nextRevealTime,
+  splitSig
 }
 

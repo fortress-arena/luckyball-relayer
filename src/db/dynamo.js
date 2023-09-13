@@ -1,5 +1,4 @@
 const { DynamoDB } = require("@aws-sdk/client-dynamodb");
-const Dynamo = require("@aws-sdk/client-dynamodb")
 require("dotenv").config({ path: require("find-config")(".env") })
 
 //const accessKey = process.env.AWS_ACCESSKEY
@@ -280,4 +279,5 @@ const getEvent = async (eventKey) => {
     console.error(err)
   }
 }
+
 

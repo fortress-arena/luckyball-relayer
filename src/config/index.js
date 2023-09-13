@@ -3,7 +3,6 @@ const srcDir = require('find-config')('src')
 //const sleep = require('util').promisify(setTimeout)
 const { readMnemonic, readWalletRefreshToken } = require(srcDir + '/keyman')
 const db = require(srcDir + '/db')
-const axios = require("axios");
 
 require('dotenv').config({ path: require('find-config')('.env') })
 
@@ -37,7 +36,7 @@ if (process.env.OPERATION_MODE == 'production' ) {
   alchemyWs = 'wss://polygon-mumbai.g.alchemy.com/v2/' + alchemyApiKey
   walletApi = 'http://127.0.0.1:3003/wallet-server/api/'
 
-} else if (process.env.OPERATION_MODE == 'test' ){
+} else if (process.env.OPERATION_MODE == 'test' ){  
   contractAddr = '0xcC360b6b80da7e2076A01d3507A37aE0B2F77b8d'
   networkId = 80001 //hardhat
   alchemyApiKey = process.env.ALCHEMY_API_KEY_MUMBAI
@@ -57,8 +56,15 @@ const gasUrls = {
   80001: 'https://gasstation-testnet.polygon.technology/v2' // Polygon Mumbai
 }
 
+// const getFeeOption = async (networkId) => {
+//   const data =  (await axios(gasUrls[networkId])).data
+//   return {
+//     maxFeePerGas: ethers.parseUnits(Math.ceil(data.fast.maxFee).toString(), 'gwei'),
+//     maxPriorityFeePerGas: ethers.parseUnits(Math.ceil(data.standard.maxPriorityFee).toString(), 'gwei')
+//   }
+// }
 const getFeeOption = async (networkId) => {
-  const data =  (await axios(gasUrls[networkId])).data
+  const data =  await (await fetch(gasUrls[networkId])).json()
   return {
     maxFeePerGas: ethers.parseUnits(Math.ceil(data.fast.maxFee).toString(), 'gwei'),
     maxPriorityFeePerGas: ethers.parseUnits(Math.ceil(data.standard.maxPriorityFee).toString(), 'gwei')

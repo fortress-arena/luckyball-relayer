@@ -232,7 +232,7 @@ const nextRevealTime = (cronSchedule) => {
 
 let providerWs
 let contractWs 
-
+let result
 const startEventSubscription = () => {
 
 
@@ -243,10 +243,15 @@ const startEventSubscription = () => {
   providerWs = new ethers.WebSocketProvider(alchemyWs)
   contractWs = new ethers.Contract(contractAddr, contractAbi, providerWs)
 
-  contractWs.on("*", (event) => {
-      //console.log(event)
-      eventHandler(event)
-      //result = event
+  contractWs.on("*", async (event) => {
+    result = event    
+    const tx = await event.getTransaction()
+    console.log('confirmations: ', await tx.confirmations())
+    await tx.wait(5)
+    console.log('confirmations: ', await tx.confirmations())
+    //console.log(event)
+    eventHandler(event)
+    
   })  
 
   let pingTimeout = null
@@ -287,7 +292,7 @@ const startEventSubscription = () => {
 
 const eventHandler = async (e) => {
   const eventKey = `eventKey-${e.log.blockNumber}-${e.log.index}`
-  //console.log(eventKey)
+  console.log(eventKey)
   if (db.get(eventKey)) { return false }
   
   if (e.eventName == 'BallIssued') {
@@ -333,7 +338,7 @@ const handler_BallIssued = async (e) => {
   const ownerSeasonKey = `owner-${owner}-${seasonId}`
   const ballList = new Set(db.get(ownerSeasonKey) || [])
 
-  for (i=startBallId; i <= endBallId; i++) {
+  for (let i=startBallId; i <= endBallId; i++) {
     const ballKey = `ball-${i}`
     //console.log(ballKey)
     db.put(ballKey, {ballId: i, owner, seasonId, code }) 
@@ -347,7 +352,7 @@ const handler_CodeSeedRevealed = async (e) => {
   const revealGroupId = e.args.revealGroupId
   const revealedSeed = await contract.revealGroupSeeds(revealGroupId)
   const ballIds = await contract.getBallsByRevealGroup(revealGroupId)
-  for (i=0; i <ballIds.length; i++) {
+  for (let i=0; i <ballIds.length; i++) {
     const ballId = Number(ballIds[i])
     const ball = db.get(`ball-${ballId}`)
     if (ball.code <= 0) {
@@ -363,7 +368,7 @@ const handler_RevealRequested = async (e) => {
   const endBallId = e.args.endBallId
   const myBalls = db.get(`owner-${owner}-${seasonId}`)
   console.log('ball length is ', myBalls.length)
-  for (i = 0; i < myBalls.length; i++) {
+  for (let i = 0; i < myBalls.length; i++) {
     const ballId = myBalls[i]
     const ball = db.get(`ball-${ballId}`)
     if (ball.code == 0 && ballId <= endBallId) {

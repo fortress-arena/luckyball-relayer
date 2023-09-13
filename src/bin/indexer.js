@@ -7,9 +7,9 @@ const fs = require('fs')
 
 let { REVEAL_SCHEDULE, DOWNLOAD_SCHEDULE } = require(srcDir + '/config')
 
-if (!fs.existsSync(storage)){
-    fs.mkdirSync('./storage')
-}
+//if (!fs.existsSync(storage)){
+//    fs.mkdirSync('./storage')
+//}
 
 const main = require(srcDir + '/main')
 const port = 3002

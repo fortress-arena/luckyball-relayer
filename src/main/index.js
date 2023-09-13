@@ -210,7 +210,7 @@ const startEventSubscription = () => {
 
 
   const EXPECTED_PONG_BACK = 3*1000
-  const KEEP_ALIVE_CHECK_INTERVAL = 60*1000
+  const KEEP_ALIVE_CHECK_INTERVAL = 120*1000
   const RESTART_WAIT = 1.5*1000
 
   providerWs = new ethers.WebSocketProvider(alchemyWs)
@@ -308,7 +308,10 @@ const handler_BallIssued = async (e) => {
 
   for (i=startBallId; i <= endBallId; i++) {
     const ballKey = `ball-${i}`
-    //console.log(ballKey)
+    if(db.get(ballKey)) {
+      console.log(`ball already exists ${ballKey}`)
+      continue
+    }
     db.put(ballKey, {ballId: i, owner, seasonId, code }) 
     ballList.add(i)
   }
@@ -363,12 +366,12 @@ const downloadBalls = async (startBlock) => {
 
   const ballGroups = await contract.queryFilter('BallIssued', startBlock, endBlock)
   ballGroups.forEach(async group => {
-    const eventKey = `eventKey-${group.blockNumber}-${group.index}`
-    if (db.get(eventKey)) { return }
+    //const eventKey = `eventKey-${group.blockNumber}-${group.index}`
+    //if (db.get(eventKey)) { return }
 
     await handler_BallIssued(group)
 
-    db.put(eventKey, true)
+    //db.put(eventKey, true)
   })
 
   await updateBallCodes(startBlock, endBlock);

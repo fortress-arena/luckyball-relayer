@@ -22,7 +22,7 @@ let providerWs
 let contractWs 
 
 if (process.env.OPERATION_MODE == 'production' ) {
-  contractAddr = '0x2933379AAd4ECb8e635C40F18D79a903B46C8cE3'
+  contractAddr = '0x93900f95839D1644420EEa9986A4464e5A03aa2F'
   networkId = 137
   alchemyApiKey = process.env.ALCHEMY_API_KEY_MAINET
   alchemyWs = "wss://polygon-mainnet.g.alchemy.com/v2/" + alchemyApiKey

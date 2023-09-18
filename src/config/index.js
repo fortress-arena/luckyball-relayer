@@ -52,10 +52,22 @@ const gasUrls = {
 const getFeeOption = async (networkId) => {
   const data =  (await axios(gasUrls[networkId])).data
   return {
-    maxFeePerGas: ethers.parseUnits(Math.ceil(data.fast.maxFee).toString(), 'gwei'),
-    maxPriorityFeePerGas: ethers.parseUnits(Math.ceil(data.standard.maxPriorityFee).toString(), 'gwei')
+    maxFeePerGas: ethers.parseUnits(Math.ceil(data.fast.maxFee + 1).toString(), 'gwei'),
+    //maxPriorityFeePerGas: ethers.parseUnits(Math.ceil(data.standard.maxPriorityFee).toString(), 'gwei')
+    maxPriorityFeePerGas: ethers.parseUnits(Math.ceil(data.fast.maxPriorityFee + 1).toString(), 'gwei')
   }
 }
+
+/*
+const getFeeOption2 = async (networkId) => {
+  const data =  (await axios(gasUrls[networkId])).data
+  return {
+    maxFeePerGas: ethers.parseUnits(Math.ceil(data.fast.maxFee + 1).toString(), 'gwei'),
+    //maxPriorityFeePerGas: ethers.parseUnits(Math.ceil(data.standard.maxPriorityFee).toString(), 'gwei')
+    maxPriorityFeePerGas: ethers.parseUnits(Math.ceil(data.fast.maxPriorityFee + 1).toString(), 'gwei')
+  }
+}
+*/
 
 if (process.env.OPERATION_MODE == 'test') {
   provider = new ethers.getDefaultProvider('http://localhost:8545')
